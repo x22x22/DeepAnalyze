@@ -10,11 +10,13 @@
 
 GRPO训练使用三个parquet文件，位于`DataScience-Instruct-500K/RL/`目录：
 
+> **注意**: 文件名`reseach.parquet`是数据集中的实际文件名（可能是原始数据中的拼写错误）。
+
 ```
 RL/
 ├── qa.parquet              # 问答任务
 ├── datatask.parquet        # 数据处理任务
-└── reseach.parquet         # 开放式研究任务
+└── reseach.parquet         # 开放式研究任务（实际文件名）
 ```
 
 ### 1.2 数据样本结构
