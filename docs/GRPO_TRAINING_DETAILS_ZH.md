@@ -606,6 +606,159 @@ Step 4: 策略更新
    - 开放式任务的"好"有多种形式
    - GRPO通过对比学习捕获这些多样性
 
+### 5.3 关键实现细节：LLM评判的调用时机
+
+#### 代码实现验证
+
+LLM-as-a-Judge函数确实存在于代码库中：
+
+**位置**: `deepanalyze/SkyRL/skyrl-train/examples/deepanalyze/utils.py`
+
+```python
+# 第203行
+def llm_as_judgement_accuracy(completion, reference, question, client, model):
+    # 调用外部LLM（如GPT-4o）进行评判
+    response = client.chat.completions.create(
+        model=model, 
+        messages=[{"role": "user", "content": message}]
+    )
+    ...
+
+# 第333行
+def llm_as_judgement_opendomain(completion, reference, question, client, model):
+    # 调用外部LLM进行5维度评判
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": message}]
+    )
+    ...
+```
+
+**调用位置**: `deepanalyze/SkyRL/skyrl-train/examples/deepanalyze/deepanalyze_env.py`
+
+```python
+def _get_reward(self, action: str, done: bool) -> float:
+    if done:  # ⚠️ 关键：只有在episode完成时才计算奖励
+        # 对于QA任务
+        if self.reward_spec["method"] == "qa":
+            reward_analysis = llm_as_judgement_analyze(
+                chat_history_str,
+                self.reward_spec["ground_truth"],
+                self.extras["input_seq"],
+                self.llm_judgement_client,  # OpenAI客户端
+                self.llm_judgement_model,   # 如"gpt-4o"
+            )
+        
+        # 对于OpenResearch任务
+        elif self.reward_spec["method"] == "openresearch":
+            reward = llm_as_judgement_opendomain(...)
+    else:
+        return 0  # 中间步骤不调用LLM
+```
+
+#### 性能关键点：何时调用LLM？
+
+**重要澄清**: LLM评判**不是**每个训练样本都调用，调用时机很关键：
+
+1. **只在Episode完成时调用** (`if done:`):
+   - Agent完成整个任务（最多30轮交互）后
+   - 生成最终答案后
+   - 不是每轮交互都调用
+
+2. **GRPO的批处理机制**:
+   ```python
+   # 配置：scripts/multi_rl.sh
+   trainer.train_batch_size=256           # PPO批次大小
+   generator.n_samples_per_prompt=5       # 每个提示5个样本
+   ```
+   
+   - 每个训练批次：256个prompts
+   - 每个prompt生成5个完整响应
+   - 总共：256 × 5 = 1,280个完整episode
+   - LLM评判调用次数：1,280次（每个episode完成后1次）
+
+3. **实际训练数据量**:
+   - RL训练数据：数千个样本（不是50万）
+   - 50万是SFT阶段的数据量
+   - GRPO阶段使用的是精选的RL轨迹数据
+
+#### 训练时间成本分析
+
+**实际情况**:
+
+```
+假设RL训练数据：5,000个样本
+每个样本生成5个响应：5,000 × 5 = 25,000次episode
+每个episode的LLM评判：1次（episode完成后）
+总LLM调用次数：25,000次
+
+如果使用GPT-4o-mini（更便宜）：
+- 每次评判：平均5K tokens（输入+输出）
+- 总tokens：25,000 × 5K = 125M tokens
+- 成本：约$200-300（取决于定价）
+- 时间：并行调用下约2-4小时
+```
+
+**为什么可行**:
+
+1. **异步并行处理**:
+   ```python
+   generator.async_engine=true          # 异步推理引擎
+   generator.num_inference_engines=8    # 8个并行引擎
+   ```
+   - 多个episode同时完成，LLM评判可以并行
+   - 8个GPU并行推理，LLM评判也可以批量并行请求
+
+2. **只在关键阶段使用**:
+   - Stage 1（420K样本）：不使用LLM评判
+   - Stage 2（26K样本）：不使用LLM评判
+   - Stage 3 GRPO（数千样本）：使用LLM评判
+   
+3. **相对排序减少调用**:
+   - GRPO通过5个样本的相对排序学习
+   - 不需要绝对精确的分数
+   - 评判稳定性要求相对较低
+
+#### 实际训练配置示例
+
+```python
+# deepanalyze_env.py 第39-46行
+env_config = DictConfig({
+    "api_key": "your_openai_api_key",
+    "base_url": "https://api.openai.com/v1",
+    "llm_judgement_model": "gpt-4o-mini",  # 使用mini版本降低成本
+    "workspace": "/path/to/workspace"
+})
+```
+
+**成本优化实践**:
+- 使用GPT-4o-mini而非GPT-4o（成本降低80%）
+- 可以部署本地评判模型（如Qwen2.5-72B-Instruct）
+- 缓存相似completion的评判结果
+
+#### 论文中的实际训练时长
+
+根据DeepAnalyze论文（arXiv:2510.16872）：
+- **Stage 3 GRPO训练**: 约1-2天（8×A100 GPU）
+- **不是**数周或数月
+- LLM评判的时间成本在可接受范围内
+
+#### 总结：性能是否可行？
+
+✅ **是的，这是项目的真实实现**
+
+**关键要点**:
+1. LLM评判只在episode完成时调用（不是每步）
+2. GRPO阶段的数据量是数千级别（不是50万）
+3. 可以并行处理和批量请求
+4. 成本和时间在研究项目的可接受范围内
+5. 相对排序学习降低了对评判精确度的要求
+
+**代码证据**:
+- `utils.py`: 函数定义（第203行、333行）
+- `deepanalyze_env.py`: 调用逻辑（第95-169行）
+- `multi_rl.sh`: 训练配置（第27-42行）
+
 ## 六、奖励函数设计的关键洞察
 
 ### 6.1 混合奖励的重要性
