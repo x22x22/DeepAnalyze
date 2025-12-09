@@ -329,8 +329,9 @@ For a comprehensive analysis of DeepAnalyze's training approach, including:
 - SQL task training methodology
 
 Please refer to our detailed documentation:
-- **[Training Analysis (English)](./docs/TRAINING_ANALYSIS_EN.md)**
-- **[训练方法分析（中文）](./docs/TRAINING_ANALYSIS_ZH.md)**
+- **[Quick Reference Guide](./docs/TRAINING_QUICK_REFERENCE.md)** - Overview and key Q&A
+- **[Training Analysis (English)](./docs/TRAINING_ANALYSIS_EN.md)** - In-depth analysis
+- **[训练方法分析（中文）](./docs/TRAINING_ANALYSIS_ZH.md)** - 深度分析
 
 ## 👏 Contribution
 > We welcome all forms of contributions, and merged PRs will be listed as contributors.
