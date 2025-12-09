@@ -96,6 +96,8 @@ For **Research tasks**:
 
 ## 📦 Data Structure
 
+> **Note**: The directory names `interation` and `reseach` are the actual names used in the dataset (likely typos in the original data structure).
+
 ```
 DataScience-Instruct-500K/
 ├── reasoning/                    # Stage 1 Data (~420K)
