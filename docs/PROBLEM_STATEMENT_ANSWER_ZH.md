@@ -269,4 +269,5 @@ DeepAnalyze在训练方面的核心创新：
 - **快速参考**: [TRAINING_QUICK_REFERENCE.md](./TRAINING_QUICK_REFERENCE.md)
 - **完整分析**: [TRAINING_ANALYSIS_ZH.md](./TRAINING_ANALYSIS_ZH.md)
 - **英文版本**: [TRAINING_ANALYSIS_EN.md](./TRAINING_ANALYSIS_EN.md)
+- **GRPO详细说明**: [GRPO_TRAINING_DETAILS_ZH.md](./GRPO_TRAINING_DETAILS_ZH.md) - 训练集结构与奖励函数详解
 - **论文**: https://arxiv.org/abs/2510.16872

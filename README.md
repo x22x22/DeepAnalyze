@@ -333,6 +333,7 @@ Please refer to our detailed documentation:
 - **[Quick Reference Guide](./docs/TRAINING_QUICK_REFERENCE.md)** - Overview and key Q&A
 - **[Training Analysis (English)](./docs/TRAINING_ANALYSIS_EN.md)** - In-depth analysis
 - **[训练方法分析（中文）](./docs/TRAINING_ANALYSIS_ZH.md)** - 深度分析
+- **[GRPO训练详细说明（中文）](./docs/GRPO_TRAINING_DETAILS_ZH.md)** - GRPO training details: dataset structure and reward functions
 
 ## 👏 Contribution
 > We welcome all forms of contributions, and merged PRs will be listed as contributors.

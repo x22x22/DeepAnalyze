@@ -193,6 +193,7 @@ DeepAnalyze使用了**SkyRL**，这是一个专为复杂推理任务设计的RL�
    - 相对于传统PPO更稳定
    - 使用相对奖励而非绝对奖励
    - 不使用KL散度损失（`use_kl_loss=false`）
+   - **详细说明**: 参见 [GRPO_TRAINING_DETAILS_ZH.md](./GRPO_TRAINING_DETAILS_ZH.md)
 
 3. **推理后端**:
    - 支持vLLM后端（高效推理）
