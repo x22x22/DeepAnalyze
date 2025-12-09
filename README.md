@@ -320,6 +320,17 @@ For training, please refer to [`./deepanalyze/ms-swift/requirements.txt`](./deep
 ### 3. Evaluation
 - We have unified the evaluation of most existing data science benchmarks using vLLM (with more being continuously added...). You can directly follow the introduction in [./playground](./playground) to quickly evaluate DeepAnalyze or your own agent.
 
+## 📚 Training Methodology Analysis
+
+For a comprehensive analysis of DeepAnalyze's training approach, including:
+- Curriculum-based agentic training strategy
+- Reinforcement learning with GRPO algorithm
+- Hybrid reward functions
+- SQL task training methodology
+
+Please refer to our detailed documentation:
+- **[Training Analysis (English)](./docs/TRAINING_ANALYSIS_EN.md)**
+- **[训练方法分析（中文）](./docs/TRAINING_ANALYSIS_ZH.md)**
 
 ## 👏 Contribution
 > We welcome all forms of contributions, and merged PRs will be listed as contributors.
